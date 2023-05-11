@@ -12,7 +12,9 @@ class Process(object):
         pass
 
     def run(self, img_dir='colours-img', json_file='rgb.json'):
-        for img in sorted(os.listdir(img_dir)):
+        d = {}
+        imgs = sorted(os.listdir(img_dir))
+        for index, img in enumerate(imgs):
             I = plt.imread(osp.join(img_dir, img))
             if np.size(I, axis=-1) > 3:
                 print(img)
@@ -27,6 +29,11 @@ class Process(object):
                 int(0.5 + np.mean(I[:,:,1][LI])),
                 int(0.5 + np.mean(I[:,:,2][LI])),
             )
+            img = osp.splitext(img)[0].strip()
+            d[img] = colour
+            print(f'{index} of {len(imgs)}')
+        with open(json_file, 'w') as j:
+            json.dump(d, j, indent=2)
 
 
 if __name__ == '__main__':
