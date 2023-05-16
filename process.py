@@ -23,9 +23,9 @@ def process(img_dir='colours-img', json_file='rgb.json'):
         if LI[0,0]:
             LI = np.logical_not(LI)
         colour = (
-            int(0.5 + np.mean(I[:,:,0][LI])),
-            int(0.5 + np.mean(I[:,:,1][LI])),
-            int(0.5 + np.mean(I[:,:,2][LI])),
+            np.mean(I[:,:,0][LI])/255,
+            np.mean(I[:,:,1][LI])/255,
+            np.mean(I[:,:,2][LI])/255,
         )
         img = osp.splitext(img)[0].strip()
         assert img.startswith('10')
