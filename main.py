@@ -1,4 +1,5 @@
 import argparse
+from pixel import Pixel
 
 
 if __name__ == '__main__':
@@ -7,12 +8,20 @@ if __name__ == '__main__':
         help='The image to be pixelized.')
     parser.add_argument('--orientation', type=str, default='vertical',
         help='If the pixel plates should be placed: vertical or horizontal.')
-    parser.add_argument('--align', type=str, default='center center',
-        help='How the image should be aligned with the pixel plates.')
+    parser.add_argument('--align', type=str, default='center-center',
+        help='''
+        How the image should be aligned with the pixel plates.
+        Should be of the form 'xalign-yalign' where xalign can be:
+        - left, right, centre, center, or
+        - a float between 0 and 1 (0=left, 1=right)
+        and yaling can be:
+        - bottom, top, centre, center, or
+        - a float between 0 and 1 (0=top, 1=bottom).
+        ''')
     parser.add_argument('--dimension', type=str, default='1',
         help='''
         The number of horizontal and vertical plates.
-        Either a single number or two numbers with an 'x' in-between.
+        Either a single number or two numbers with an '-' in-between.
         ''')
     parser.add_argument('--colours', type=str, default='all',
         help='''
@@ -26,6 +35,7 @@ if __name__ == '__main__':
         help='''
         The number of squares of the pixel plate used to represent a single pixel.
         This parameter can be used to mix simple colours to create more complec ones.
-        Either a single or two numbers with an 'x' in-between.
+        Either a single or two numbers with an '-' in-between.
         ''')
     kwargs = vars(parser.parse_args())
+    Pixel(**kwargs).run()
