@@ -20,9 +20,9 @@ class Pixel(object):
         else:
             self.pixelplate = (50, 40)
 
-        assert align.count('-') == 1
+        assert align.count('*') == 1
         self.align = align
-        self.xalign, self.yalign = self.align.split('-')
+        self.xalign, self.yalign = self.align.split('*')
         if self.xalign == 'left':
             self.xalign = 0.
         elif self.xalign == 'right':
@@ -44,24 +44,24 @@ class Pixel(object):
         else:
             self.yalign = float(self.yalign)
 
-        assert dimension.count('-') <= 1
-        if '-' not in dimension:
+        assert dimension.count('*') <= 1
+        if '*' not in dimension:
             self.xdim = int(dimension)
             self.ydim = int(dimension)
         else:
-            self.xdim, self.ydim = dimension.split('-')
+            self.xdim, self.ydim = dimension.split('*')
             self.xdim = int(self.xdim)
             self.ydim = int(self.ydim)
 
         self.colours = colours
         self.__colours__()
 
-        assert pixelsize.count('-') <= 1
-        if '-' not in pixelsize:
+        assert pixelsize.count('*') <= 1
+        if '*' not in pixelsize:
             self.xps = int(pixelsize)
             self.yps = int(pixelsize)
         else:
-            self.xps, self.yps = pixelsize.split('-')
+            self.xps, self.yps = pixelsize.split('*')
             self.xps = int(self.xps)
             self.yps = int(self.yps)
 
