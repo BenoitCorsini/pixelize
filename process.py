@@ -28,6 +28,10 @@ def process(img_dir='colours-img', json_file='rgb.json'):
             int(0.5 + np.mean(I[:,:,2][LI])),
         )
         img = osp.splitext(img)[0].strip()
+        assert img.startswith('10')
+        img = img[2:].replace('_pixelsquare', '')
+        assert img.isdigit()
+        img = int(img)
         d[img] = colour
         print(f'{index} of {len(imgs)}')
     with open(json_file, 'w') as j:
