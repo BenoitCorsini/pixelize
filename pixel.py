@@ -1,3 +1,6 @@
+import os
+import os.path as osp
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgb
@@ -68,8 +71,52 @@ class Pixel(object):
             self.xps = int(self.xps)
             self.yps = int(self.yps)
 
-    def __colours__(self):
-        pass
+    def __colours__(self, rgb_dict='rgb.json'):
+        with open(rgb_dict, 'r') as d:
+            rgb = json.load(d)
+        if self.colours == 'all':
+            self.rgb = rgb.copy()
+        else:
+            if self.colours == 'primary':
+                keys = 'blue-red-yellow'
+            elif self.colours == 'simple':
+                keys = 'b-g-r-c-m-y-k-w'
+            elif self.colours == 'classic':
+                keys = 'tab:blue'
+                keys += '-tab:orange'
+                keys += '-tab:green'
+                keys += '-tab:red'
+                keys += '-tab:purple'
+                keys += '-tab:brown'
+                keys += '-tab:pink'
+                keys += '-tab:gray'
+                keys += '-tab:olive'
+                keys += '-tab:cyan'
+                keys += '-white'
+                keys += '-black'
+            else:
+                keys = self.colours
+
+            rgb_keys = []
+            for key in keys.split('-'):
+                rgb_keys.append(self.key_to_rgb_key(key, rgb))
+            self.rgb = {key : rgb[key] for key in sorted(rgb_keys)}
+
+    @staticmethod
+    def key_to_rgb_key(key, rgb):
+        if key.isdigit():
+            assert key in rgb
+            return key
+        else:
+            key_colour = np.array(to_rgb(key))
+            best_key = '000'
+            best_dist = 1
+            for rgb_key, rgb_colour in rgb.items():
+                dist = np.mean((key_colour - np.array(rgb_colour))**2)
+                if dist < best_dist:
+                    best_key = rgb_key
+                    best_dist = dist
+            return best_key
 
     def run(self):
         pass
