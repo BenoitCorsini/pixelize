@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import to_rgb
 
 
 class Pixel(object):
@@ -45,11 +46,12 @@ class Pixel(object):
             self.yalign = float(self.yalign)
 
         assert dimension.count('*') <= 1
-        if '*' not in dimension:
-            self.xdim = int(dimension)
-            self.ydim = int(dimension)
+        self.dimension = dimension
+        if '*' not in self.dimension:
+            self.xdim = int(self.dimension)
+            self.ydim = int(self.dimension)
         else:
-            self.xdim, self.ydim = dimension.split('*')
+            self.xdim, self.ydim = self.dimension.split('*')
             self.xdim = int(self.xdim)
             self.ydim = int(self.ydim)
 
@@ -57,11 +59,12 @@ class Pixel(object):
         self.__colours__()
 
         assert pixelsize.count('*') <= 1
-        if '*' not in pixelsize:
-            self.xps = int(pixelsize)
-            self.yps = int(pixelsize)
+        self.pixelsize = pixelsize
+        if '*' not in self.pixelsize:
+            self.xps = int(self.pixelsize)
+            self.yps = int(self.pixelsize)
         else:
-            self.xps, self.yps = pixelsize.split('*')
+            self.xps, self.yps = self.pixelsize.split('*')
             self.xps = int(self.xps)
             self.yps = int(self.yps)
 
