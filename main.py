@@ -38,4 +38,4 @@ if __name__ == '__main__':
         Either a single or two numbers with an '*' in-between.
         ''')
     kwargs = vars(parser.parse_args())
-    Pixel(**kwargs).run()
+    Pixel(**kwargs)

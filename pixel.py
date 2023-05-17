@@ -15,8 +15,27 @@ class Pixel(object):
                  dimension='1',
                  colours='all',
                  pixelsize='1'):
-        self.image = image
+        self.__image__(image)
+        self.__orientation__(orientation)
+        self.__align__(align)
+        self.__dimension__(dimension)
+        self.__colours__(colours)
+        self.__pixelsize__(pixelsize)
+        
+        self.run()
 
+    def __image__(self, image):
+        assert osp.exists(image)
+        self.image = image
+        self.im = plt.imread(self.image)
+        if np.size(self.im, axis=-1) > 3:
+            self.im = self.im[:,:,:3]*self.im[:,:,3:]
+        if np.max(self.im) > 1:
+            self.im = self.im/255
+        self.imx = np.size(self.im, axis=0)
+        self.imy = np.size(self.im, axis=1)
+
+    def __orientation__(self, orientation):
         assert orientation in ['vertical', 'horizontal']
         self.orientation = orientation
         if self.orientation == 'vertical':
@@ -24,6 +43,7 @@ class Pixel(object):
         else:
             self.pixelplate = (50, 40)
 
+    def __align__(self, align):
         assert align.count('*') == 1
         self.align = align
         self.xalign, self.yalign = self.align.split('*')
@@ -48,6 +68,7 @@ class Pixel(object):
         else:
             self.yalign = float(self.yalign)
 
+    def __dimension__(self, dimension):
         assert dimension.count('*') <= 1
         self.dimension = dimension
         if '*' not in self.dimension:
@@ -58,20 +79,20 @@ class Pixel(object):
             self.xdim = int(self.xdim)
             self.ydim = int(self.ydim)
 
+        self.nx = self.pixelplate[0]*self.xdim
+        self.ny = self.pixelplate[1]*self.ydim
+        self.mult = min(
+            int(self.imx/self.nx),
+            int(self.imx/self.nx),
+        )
+        assert self.mult > 0
+        self.dx = self.imx - self.mult*self.nx
+        self.dx = int(0.5 + self.xalign*self.dx)
+        self.dy = self.imy - self.mult*self.ny
+        self.dy = int(0.5 + self.yalign*self.dy)
+
+    def __colours__(self, colours, rgb_dict='rgb.json'):
         self.colours = colours
-        self.__colours__()
-
-        assert pixelsize.count('*') <= 1
-        self.pixelsize = pixelsize
-        if '*' not in self.pixelsize:
-            self.xps = int(self.pixelsize)
-            self.yps = int(self.pixelsize)
-        else:
-            self.xps, self.yps = self.pixelsize.split('*')
-            self.xps = int(self.xps)
-            self.yps = int(self.yps)
-
-    def __colours__(self, rgb_dict='rgb.json'):
         with open(rgb_dict, 'r') as d:
             rgb = json.load(d)
         if self.colours == 'all':
@@ -102,6 +123,20 @@ class Pixel(object):
                 rgb_keys.append(self.key_to_rgb_key(key, rgb))
             self.rgb = {key : rgb[key] for key in sorted(rgb_keys)}
 
+    def __pixelsize__(self, pixelsize):
+        assert pixelsize.count('*') <= 1
+        self.pixelsize = pixelsize
+        if '*' not in self.pixelsize:
+            self.xps = int(self.pixelsize)
+            self.yps = int(self.pixelsize)
+        else:
+            self.xps, self.yps = self.pixelsize.split('*')
+            self.xps = int(self.xps)
+            self.yps = int(self.yps)
+
+        assert (self.nx % self.xps) == 0
+        assert (self.ny % self.yps) == 0
+
     @staticmethod
     def key_to_rgb_key(key, rgb):
         if key.isdigit():
@@ -118,6 +153,9 @@ class Pixel(object):
                     best_dist = dist
             return best_key
 
-    def run(self):
-        pass
+    def reduce_im(self):
+        print(self.im.shape)
+        print(self.nx, self.ny)
 
+    def run(self):
+        self.reduce_im()
