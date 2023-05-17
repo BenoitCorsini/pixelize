@@ -11,13 +11,15 @@ class Pixel(object):
     def __init__(self,
                  image,
                  orientation='vertical',
-                 align='center center',
+                 halign='center',
+                 valign='center',
                  dimension='1',
                  colours='all',
                  pixelsize='1'):
         self.__image__(image)
         self.__orientation__(orientation)
-        self.__align__(align)
+        self.__halign__(halign)
+        self.__valign__(valign)
         self.__dimension__(dimension)
         self.__colours__(colours)
         self.__pixelsize__(pixelsize)
@@ -39,51 +41,53 @@ class Pixel(object):
         assert orientation in ['vertical', 'horizontal']
         self.orientation = orientation
         if self.orientation == 'vertical':
-            self.pixelplate = (40, 50)
-        else:
             self.pixelplate = (50, 40)
+        else:
+            self.pixelplate = (40, 50)
 
-    def __align__(self, align):
-        assert align.count('*') == 1
-        self.align = align
-        self.xalign, self.yalign = self.align.split('*')
-        if self.xalign == 'left':
-            self.xalign = 0.
-        elif self.xalign == 'right':
-            self.xalign = 1.
-        elif self.xalign == 'center':
-            self.xalign = 0.5
-        elif self.xalign == 'centre':
-            self.xalign = 0.5
-        else:
-            self.xalign = float(self.xalign)
-        if self.yalign == 'bottom':
+    def __halign__(self, halign):
+        self.halign = halign
+        if self.halign == 'left':
             self.yalign = 0.
-        elif self.yalign == 'top':
+        elif self.halign == 'right':
             self.yalign = 1.
-        elif self.yalign == 'center':
+        elif self.halign == 'center':
             self.yalign = 0.5
-        elif self.yalign == 'centre':
+        elif self.halign == 'centre':
             self.yalign = 0.5
         else:
-            self.yalign = float(self.yalign)
+            self.yalign = float(self.halign)
+
+    def __valign__(self, valign):
+        self.valign = valign
+        if self.valign == 'bottom':
+            self.xalign = 0.
+        elif self.valign == 'top':
+            self.xalign = 1.
+        elif self.valign == 'center':
+            self.xalign = 0.5
+        elif self.valign == 'centre':
+            self.xalign = 0.5
+        else:
+            self.xalign = float(self.valign)
+        self.xalign = 1 - self.xalign
 
     def __dimension__(self, dimension):
-        assert dimension.count('*') <= 1
+        assert dimension.count('x') <= 1
         self.dimension = dimension
-        if '*' not in self.dimension:
-            self.xdim = int(self.dimension)
+        if 'x' not in self.dimension:
             self.ydim = int(self.dimension)
+            self.xdim = int(self.dimension)
         else:
-            self.xdim, self.ydim = self.dimension.split('*')
-            self.xdim = int(self.xdim)
+            self.ydim, self.xdim = self.dimension.split('x')
             self.ydim = int(self.ydim)
+            self.xdim = int(self.xdim)
 
         self.nx = self.pixelplate[0]*self.xdim
         self.ny = self.pixelplate[1]*self.ydim
         self.mult = min(
             int(self.imx/self.nx),
-            int(self.imx/self.nx),
+            int(self.imy/self.ny),
         )
         assert self.mult > 0
         self.dx = self.imx - self.mult*self.nx
@@ -124,13 +128,13 @@ class Pixel(object):
             self.rgb = {key : rgb[key] for key in sorted(rgb_keys)}
 
     def __pixelsize__(self, pixelsize):
-        assert pixelsize.count('*') <= 1
+        assert pixelsize.count('x') <= 1
         self.pixelsize = pixelsize
-        if '*' not in self.pixelsize:
+        if 'x' not in self.pixelsize:
             self.xps = int(self.pixelsize)
             self.yps = int(self.pixelsize)
         else:
-            self.xps, self.yps = self.pixelsize.split('*')
+            self.xps, self.yps = self.pixelsize.split('x')
             self.xps = int(self.xps)
             self.yps = int(self.yps)
 
@@ -154,8 +158,26 @@ class Pixel(object):
             return best_key
 
     def reduce_im(self):
-        print(self.im.shape)
-        print(self.nx, self.ny)
+        self.pim = np.zeros((self.nx, self.ny, 3))
+        for i in range(self.nx):
+            for j in range(self.ny):
+                self.pim[i,j,:] = np.mean(np.mean(
+                    self.im[
+                        self.dx + self.mult*i:self.dx + self.mult + self.mult*i,
+                        self.dy + self.mult*j:self.dy + self.mult + self.mult*j,
+                    :],
+                axis=0), axis=0)
+
+    def savepim(self):
+        fig = plt.figure(figsize=(self.ny, self.nx), dpi=1)
+        fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+        ax = fig.add_subplot()
+        ax.axis('off')
+        ax.set_xlim(xmin=0, xmax=self.ny)
+        ax.set_ylim(ymin=0, ymax=self.nx)
+        ax.imshow(self.pim, extent=(0, self.ny, 0, self.nx))
+        fig.savefig('pim.png')
 
     def run(self):
         self.reduce_im()
+        self.savepim()
