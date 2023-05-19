@@ -1,0 +1,6 @@
+__pycache__/
+templates/
+
+*.swp
+pim.png
+rim.png
