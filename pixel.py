@@ -262,7 +262,10 @@ class Pixel(object):
         print(f'Time to get colour options: {self.timer()}')
         return colour, option
 
-    def savepim(self, dpi=1):
+    def savepim(self, dpi=1, templates_dir='templates'):
+        if osp.exists(templates_dir):
+            shutil.rmtree(templates_dir)
+        os.makedirs(templates_dir)
         fig = plt.figure(figsize=(self.ny, self.nx), dpi=dpi)
         fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
         ax = fig.add_subplot()
@@ -270,14 +273,11 @@ class Pixel(object):
         ax.set_xlim(xmin=0, xmax=self.ny)
         ax.set_ylim(ymin=0, ymax=self.nx)
         ax.imshow(self.pim, extent=(0, self.ny, 0, self.nx))
-        fig.savefig('pim.png')
+        fig.savefig(osp.join(templates_dir, 'image.png'))
         plt.close()
 
     def savenim(self, dpi=1, templates_dir='templates', plates_dir='plates.json'):
         self.plates = {}
-        if osp.exists(templates_dir):
-            shutil.rmtree(templates_dir)
-        os.makedirs(templates_dir)
         for num in np.unique(self.nim):
             fig = plt.figure(figsize=(self.ny, self.nx), dpi=dpi)
             fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
@@ -353,8 +353,8 @@ class Pixel(object):
 
     def run(self, dpi=20, templates_dir='templates'):
         self.reduce_im()
-        self.saverim(dpi=dpi)
+        #self.saverim(dpi=dpi)
         self.pixel_im()
-        self.savepim(dpi=dpi)
+        self.savepim(dpi=dpi, templates_dir=templates_dir)
         self.savenim(dpi=dpi, templates_dir=templates_dir)
         self.saveplates(dpi=dpi, templates_dir=templates_dir)
