@@ -37,5 +37,7 @@ if __name__ == '__main__':
         This parameter can be used to mix simple colours to create more complec ones.
         Either a single or two numbers with an 'x' in-between.
         ''')
+    parser.add_argument('--dpi', type=int, default=20,
+        help='The dpi for all images.')
     kwargs = vars(parser.parse_args())
     Pixel(**kwargs)

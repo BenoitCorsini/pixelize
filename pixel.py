@@ -19,7 +19,8 @@ class Pixel(object):
                  valign='center',
                  dimension='1',
                  colours='all',
-                 pixelsize='1'):
+                 pixelsize='1',
+                 dpi=1):
         self.start_time = time()
         self.__image__(image)
         self.__orientation__(orientation)
@@ -28,6 +29,13 @@ class Pixel(object):
         self.__dimension__(dimension)
         self.__colours__(colours)
         self.__pixelsize__(pixelsize)
+        self.dpi = dpi
+        folder, file = osp.split(self.image)
+        file = osp.splitext(file)[0]
+        self.save_dir = osp.join(folder, f'output:{file}')
+        if osp.exists(self.save_dir):
+            shutil.rmtree(self.save_dir)
+        os.makedirs(self.save_dir)
         print(f'Time to setup: {self.timer()}')
         
         self.run()
@@ -205,17 +213,6 @@ class Pixel(object):
         sys.stdout.write('\033[F\033[K')
         print(f'Time to reduce image: {self.timer()}')
 
-    def saverim(self, dpi=1):
-        fig = plt.figure(figsize=(self.ny, self.nx), dpi=dpi)
-        fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-        ax = fig.add_subplot()
-        ax.axis('off')
-        ax.set_xlim(xmin=0, xmax=self.ny)
-        ax.set_ylim(ymin=0, ymax=self.nx)
-        ax.imshow(self.rim, extent=(0, self.ny, 0, self.nx))
-        fig.savefig('rim.png')
-        plt.close()
-
     def pixel_im(self):
         colour, option = self.get_colour_options()
         print(f'0% of pixel image: {self.timer()}')
@@ -271,24 +268,23 @@ class Pixel(object):
         print(f'Time to get colour options: {self.timer()}')
         return colour, option
 
-    def savepim(self, dpi=1, templates_dir='templates'):
-        if osp.exists(templates_dir):
-            shutil.rmtree(templates_dir)
-        os.makedirs(templates_dir)
-        fig = plt.figure(figsize=(self.ny, self.nx), dpi=dpi)
+    def savepim(self):
+        fig = plt.figure(figsize=(self.ny, self.nx), dpi=self.dpi)
         fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
         ax = fig.add_subplot()
         ax.axis('off')
         ax.set_xlim(xmin=0, xmax=self.ny)
         ax.set_ylim(ymin=0, ymax=self.nx)
         ax.imshow(self.pim, extent=(0, self.ny, 0, self.nx))
-        fig.savefig(osp.join(templates_dir, 'image.png'))
+        fig.savefig(osp.join(self.save_dir, 'image.png'))
         plt.close()
 
-    def savenim(self, dpi=1, templates_dir='templates', plates_dir='plates.json'):
+    def savenim(self):
+        if not osp.exists(osp.join(self.save_dir, 'nims')):
+            os.makedirs(osp.join(self.save_dir, 'nims'))
         self.plates = {}
         for num in np.unique(self.nim):
-            fig = plt.figure(figsize=(self.ny, self.nx), dpi=dpi)
+            fig = plt.figure(figsize=(self.ny, self.nx), dpi=self.dpi)
             fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
             ax = fig.add_subplot()
             ax.axis('off')
@@ -302,13 +298,15 @@ class Pixel(object):
                 'pixels' : count,
                 'extras' : (6*6*4 - 4)*plates - count,
             }
-            fig.savefig(osp.join(templates_dir, f'{num}:{count}({plates}).png'))
+            fig.savefig(osp.join(self.save_dir, 'nims', f'{num}:{count}({plates}).png'))
             plt.close()
-        with open(osp.join(templates_dir, 'plates.json'), 'w') as p:
+        with open(osp.join(self.save_dir, 'plates.json'), 'w') as p:
             json.dump(self.plates, p, indent=2)
 
-    def saveplates(self, dpi=1, templates_dir='templates'):
+    def saveplates(self):
         print(f'0% of pixel plates: {self.timer()}')
+        if not osp.exists(osp.join(self.save_dir, 'templates')):
+            os.makedirs(osp.join(self.save_dir, 'templates'))
         figsize = (40, 50)
         xmax = 40
         ymax = 50
@@ -328,7 +326,7 @@ class Pixel(object):
                         j*self.pixelplate[1]:(j+1)*self.pixelplate[1],
                 ]
                 for num in np.unique(nim_plate):
-                    fig = plt.figure(figsize=figsize, dpi=dpi)
+                    fig = plt.figure(figsize=figsize, dpi=self.dpi)
                     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
                     ax = fig.add_subplot()
                     ax.axis('off')
@@ -352,7 +350,7 @@ class Pixel(object):
                             'gray',
                             lw=5
                         )
-                    fig.savefig(osp.join(templates_dir, f'{j+1}x{self.xdim-i}({num}).png'))
+                    fig.savefig(osp.join(self.save_dir, 'templates', f'{j+1}x{self.xdim-i}({num}).png'))
                     plt.close()
                 perc = int(100*(1 + i*self.ydim + j)/(self.xdim*self.ydim))
                 sys.stdout.write('\033[F\033[K')
@@ -360,10 +358,9 @@ class Pixel(object):
         sys.stdout.write('\033[F\033[K')
         print(f'Time to get pixel plates: {self.timer()}')
 
-    def run(self, dpi=20, templates_dir='templates'):
+    def run(self):
         self.reduce_im()
-        #self.saverim(dpi=dpi)
         self.pixel_im()
-        self.savepim(dpi=dpi, templates_dir=templates_dir)
-        self.savenim(dpi=dpi, templates_dir=templates_dir)
-        self.saveplates(dpi=dpi, templates_dir=templates_dir)
+        self.savepim()
+        self.savenim()
+        self.saveplates()
