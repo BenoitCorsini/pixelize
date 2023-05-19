@@ -109,6 +109,8 @@ class Pixel(object):
         else:
             if self.colours == 'primary':
                 keys = 'blue-red-yellow'
+            elif self.colours == 'basic':
+                keys = 'peachpuff-crimson-ivory-gold-royalblue-navy-forestgreen'
             elif self.colours == 'simple':
                 keys = 'b-g-r-c-m-y-k-w'
             elif self.colours == 'classic':
@@ -207,7 +209,7 @@ class Pixel(object):
         plt.close()
 
     def pixel_im(self):
-        colour_options = self.get_colour_options()
+        colour, option = self.get_colour_options()
         print(f'0% of pixel image: {self.timer()}')
         self.pim = np.zeros((self.nx, self.ny, 3), dtype=float)
         self.nim = np.zeros((self.nx, self.ny), dtype=int)
@@ -215,28 +217,23 @@ class Pixel(object):
         ysteps = int(self.ny/self.yps)
         for i in range(xsteps):
             for j in range(ysteps):
-                block = self.rim[
+                block = np.stack([self.rim[
                     i*self.xps:i*self.xps + self.xps,
                     j*self.yps:j*self.yps + self.yps,
-                :]
-                best_mean = 1
-                best_dist = 1
-                for colour, option in colour_options:
-                    D = block - colour
-                    mean = np.mean(np.abs(np.mean(np.mean(D, axis=0), axis=0)))
-                    if mean <= best_mean + 1e-10:
-                        best_mean = mean
-                        dist = np.mean(np.abs(D))
-                        if dist < best_dist:
-                            best_dist = dist
-                            self.pim[
-                                i*self.xps:i*self.xps + self.xps,
-                                j*self.yps:j*self.yps + self.yps,
-                            :] = colour
-                            self.nim[
-                                i*self.xps:i*self.xps + self.xps,
-                                j*self.yps:j*self.yps + self.yps,
-                            ] = option
+                :]], axis=-1)
+                D = block - colour
+                mean = np.mean(np.abs(np.mean(np.mean(D, axis=0), axis=0)), axis=0)
+                dist = np.mean(np.mean(np.mean(np.abs(D), axis=0), axis=0), axis=0)
+                dist += mean > np.min(mean)
+                index = np.argmin(dist)
+                self.pim[
+                    i*self.xps:i*self.xps + self.xps,
+                    j*self.yps:j*self.yps + self.yps,
+                    :] = colour[:,:,:,index]
+                self.nim[
+                    i*self.xps:i*self.xps + self.xps,
+                    j*self.yps:j*self.yps + self.yps,
+                    ] = option[:,:,index]
                 perc = int(100*(1 + i*ysteps + j)/(xsteps*ysteps))
                 sys.stdout.write('\033[F\033[K')
                 print(f'{perc}% of pixel image: {self.timer()}')
@@ -244,7 +241,6 @@ class Pixel(object):
         print(f'Time to pixel image: {self.timer()}')
 
     def get_colour_options(self):
-        assert len(self.rgb)**(self.xps*self.yps) < 1e5
         colour_options = [(
             np.zeros((self.xps, self.yps, 3), dtype=float),
             np.zeros((self.xps, self.yps), dtype=int),
@@ -261,8 +257,11 @@ class Pixel(object):
                             colour.copy(),
                             option.copy(),
                         ))
+        colour, option = zip(*colour_options)
+        colour = np.stack(colour, axis=-1)
+        option = np.stack(option, axis=-1)
         print(f'Time to get colour options: {self.timer()}')
-        return colour_options
+        return colour, option
 
     def savepim(self, dpi=1):
         fig = plt.figure(figsize=(self.ny, self.nx), dpi=dpi)
@@ -301,4 +300,4 @@ class Pixel(object):
         self.saverim(dpi=dpi)
         self.pixel_im()
         self.savepim(dpi=dpi)
-        self.savenim(dpi=dpi, templates_dir=templates_dir)
+        #self.savenim(dpi=dpi, templates_dir=templates_dir)

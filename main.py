@@ -29,7 +29,7 @@ if __name__ == '__main__':
             Can be:
             - a list of colours separated by '-', for example 'blue-darkblue-cyan';
             - a list of plate numbers separated by '-', for example '100-220-333'; or
-            - one of the pre-implemented options ('primary', 'simple', 'classic', or 'all').
+            - one of the pre-implemented options ('primary' 'basic',, 'simple', 'classic', or 'all').
         ''')
     parser.add_argument('--pixelsize', type=str, default='1',
         help='''
