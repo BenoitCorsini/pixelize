@@ -23,13 +23,13 @@ if __name__ == '__main__':
         The number of horizontal and vertical plates.
         Either a single number or two numbers with an 'x' in-between.
         ''')
-    parser.add_argument('--colours', type=str, default='all',
+    parser.add_argument('--colours', type=str, default='basic',
         help='''
             the colours to be used for the pixelized image.
             Can be:
             - a list of colours separated by '-', for example 'blue-darkblue-cyan';
             - a list of plate numbers separated by '-', for example '100-220-333'; or
-            - one of the pre-implemented options ('primary' 'basic',, 'simple', 'classic', or 'all').
+            - one of the pre-implemented options ('primary' 'basic', 'classic', or 'all').
         ''')
     parser.add_argument('--pixelsize', type=str, default='1',
         help='''

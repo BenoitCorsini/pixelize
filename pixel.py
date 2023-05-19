@@ -111,9 +111,8 @@ class Pixel(object):
                 keys = 'blue-red-yellow'
             elif self.colours == 'basic':
                 keys = 'peachpuff-crimson-ivory-gold-royalblue-navy-forestgreen'
-            elif self.colours == 'simple':
-                keys = 'b-g-r-c-m-y-k-w'
             elif self.colours == 'classic':
+                # this will be changed later down
                 keys = 'tab:blue'
                 keys += '-tab:orange'
                 keys += '-tab:green'
@@ -278,6 +277,20 @@ class Pixel(object):
         if osp.exists(templates_dir):
             shutil.rmtree(templates_dir)
         os.makedirs(templates_dir)
+        for num in np.unique(self.nim):
+            fig = plt.figure(figsize=(self.ny, self.nx), dpi=dpi)
+            fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+            ax = fig.add_subplot()
+            ax.axis('off')
+            ax.set_xlim(xmin=0, xmax=self.ny)
+            ax.set_ylim(ymin=0, ymax=self.nx)
+            ax.imshow(self.nim != num, cmap='gray', extent=(0, self.ny, 0, self.nx))
+            count = np.sum(self.nim == num)
+            plates = int(np.ceil(count/(6*6*4 - 4)))
+            fig.savefig(osp.join(templates_dir, f'{num}:{count}({plates}).png'))
+            plt.close()
+
+    def saveplates(self, dpi=1, templates_dir='templates'):
         for i in range(self.xdim):
             for j in range(self.ydim):
                 nim_plate = self.nim[
@@ -292,7 +305,7 @@ class Pixel(object):
                     ax.set_xlim(xmin=0, xmax=self.ny)
                     ax.set_ylim(ymin=0, ymax=self.nx)
                     ax.imshow(nim_plate != num, cmap='gray', extent=(0, self.ny, 0, self.nx))
-                    fig.savefig(osp.join(templates_dir, f'nim_{i+1}_{j+1}_{num}.png'))
+                    fig.savefig(osp.join(templates_dir, f'plate{i+1}{j+1}({num}).png'))
                     plt.close()
 
     def run(self, dpi=10, templates_dir='templates'):
@@ -300,4 +313,5 @@ class Pixel(object):
         self.saverim(dpi=dpi)
         self.pixel_im()
         self.savepim(dpi=dpi)
-        #self.savenim(dpi=dpi, templates_dir=templates_dir)
+        self.savenim(dpi=dpi, templates_dir=templates_dir)
+        self.saveplates(dpi=dpi, templates_dir=templates_dir)
