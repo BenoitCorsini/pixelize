@@ -237,7 +237,7 @@ class Pixel(object):
                 sys.stdout.write('\033[F\033[K')
                 print(f'{perc}% of pixel image: {self.timer()}')
         sys.stdout.write('\033[F\033[K')
-        print(f'Time to pixel image: {self.timer()}')
+        print(f'Time to pixelize image: {self.timer()}')
 
     def get_colour_options(self):
         colour_options = [(
@@ -273,7 +273,8 @@ class Pixel(object):
         fig.savefig('pim.png')
         plt.close()
 
-    def savenim(self, dpi=1, templates_dir='templates'):
+    def savenim(self, dpi=1, templates_dir='templates', plates_dir='plates.json'):
+        self.plates = {}
         if osp.exists(templates_dir):
             shutil.rmtree(templates_dir)
         os.makedirs(templates_dir)
@@ -285,12 +286,32 @@ class Pixel(object):
             ax.set_xlim(xmin=0, xmax=self.ny)
             ax.set_ylim(ymin=0, ymax=self.nx)
             ax.imshow(self.nim != num, cmap='gray', extent=(0, self.ny, 0, self.nx))
-            count = np.sum(self.nim == num)
+            count = int(np.sum(self.nim == num))
             plates = int(np.ceil(count/(6*6*4 - 4)))
+            self.plates[int(num)] = {
+                'plates' : plates,
+                'pixels' : count,
+                'extras' : (6*6*4 - 4)*plates - count,
+            }
             fig.savefig(osp.join(templates_dir, f'{num}:{count}({plates}).png'))
             plt.close()
+        with open(osp.join(templates_dir, 'plates.json'), 'w') as p:
+            json.dump(self.plates, p, indent=2)
 
     def saveplates(self, dpi=1, templates_dir='templates'):
+        print(f'0% of pixel plates: {self.timer()}')
+        figsize = (40, 50)
+        xmax = 40
+        ymax = 50
+        plateshift = (4, 5)
+        platewidth = 63*40/100
+        plateheight = 63*50/100
+        extent = (
+            plateshift[0],
+            plateshift[0] + platewidth,
+            plateshift[1],
+            plateshift[1] + plateheight,
+        )
         for i in range(self.xdim):
             for j in range(self.ydim):
                 nim_plate = self.nim[
@@ -298,17 +319,39 @@ class Pixel(object):
                         j*self.pixelplate[1]:(j+1)*self.pixelplate[1],
                 ]
                 for num in np.unique(nim_plate):
-                    fig = plt.figure(figsize=(self.ny, self.nx), dpi=dpi)
+                    fig = plt.figure(figsize=figsize, dpi=dpi)
                     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
                     ax = fig.add_subplot()
                     ax.axis('off')
-                    ax.set_xlim(xmin=0, xmax=self.ny)
-                    ax.set_ylim(ymin=0, ymax=self.nx)
-                    ax.imshow(nim_plate != num, cmap='gray', extent=(0, self.ny, 0, self.nx))
-                    fig.savefig(osp.join(templates_dir, f'plate{i+1}{j+1}({num}).png'))
+                    ax.set_xlim(xmin=0, xmax=xmax)
+                    ax.set_ylim(ymin=0, ymax=ymax)
+                    im = nim_plate != num
+                    if self.orientation == 'horizontal':
+                        im = im.T[::-1,:]
+                    ax.imshow(im, cmap='gray', extent=extent)
+                    for z in range(41):
+                        ax.plot(
+                            [plateshift[0] + z*platewidth/40, plateshift[0] + z*platewidth/40],
+                            [plateshift[1], plateshift[1] + plateheight],
+                            'gray',
+                            lw=5
+                        )
+                    for z in range(51):
+                        ax.plot(
+                            [plateshift[0], plateshift[0] + platewidth],
+                            [plateshift[1] + z*plateheight/50, plateshift[1] + z*plateheight/50],
+                            'gray',
+                            lw=5
+                        )
+                    fig.savefig(osp.join(templates_dir, f'{j+1}x{self.xdim-i}({num}).png'))
                     plt.close()
+                perc = int(100*(1 + i*self.ydim + j)/(self.xdim*self.ydim))
+                sys.stdout.write('\033[F\033[K')
+                print(f'{perc}% of pixel plates: {self.timer()}')
+        sys.stdout.write('\033[F\033[K')
+        print(f'Time to get pixel plates: {self.timer()}')
 
-    def run(self, dpi=10, templates_dir='templates'):
+    def run(self, dpi=20, templates_dir='templates'):
         self.reduce_im()
         self.saverim(dpi=dpi)
         self.pixel_im()
