@@ -110,6 +110,17 @@ class Pixel(object):
         self.dy = self.imy - self.mult*self.ny
         self.dy = int(0.5 + self.yalign*self.dy)
 
+    def reduce_im(self):
+        self.rim = np.zeros((self.nx, self.ny, 3))
+        for i in range(self.nx):
+            for j in range(self.ny):
+                self.rim[i,j,:] = np.mean(np.mean(
+                    self.im[
+                        self.dx + self.mult*i:self.dx + self.mult + self.mult*i,
+                        self.dy + self.mult*j:self.dy + self.mult + self.mult*j,
+                    :],
+                axis=0), axis=0)
+
     def top_colours(self, colours, rgb):
         keys = ''
         use_image = False
@@ -203,23 +214,6 @@ class Pixel(object):
 
     def timer(self):
         return self.time_to_string(time() - self.start_time)
-
-    def reduce_im(self):
-        print(f'0% of reduced image: {self.timer()}')
-        self.rim = np.zeros((self.nx, self.ny, 3))
-        for i in range(self.nx):
-            for j in range(self.ny):
-                self.rim[i,j,:] = np.mean(np.mean(
-                    self.im[
-                        self.dx + self.mult*i:self.dx + self.mult + self.mult*i,
-                        self.dy + self.mult*j:self.dy + self.mult + self.mult*j,
-                    :],
-                axis=0), axis=0)
-                perc = int(100*(1 + i*self.ny + j)/(self.nx*self.ny))
-                sys.stdout.write('\033[F\033[K')
-                print(f'{perc}% of reduced image: {self.timer()}')
-        sys.stdout.write('\033[F\033[K')
-        print(f'Time to reduce image: {self.timer()}')
 
     def pixel_im(self):
         colour, option = self.get_colour_options()
