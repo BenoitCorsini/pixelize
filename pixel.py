@@ -4,6 +4,8 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgb
+from time import time
+import sys
 
 
 class Pixel(object):
@@ -16,6 +18,7 @@ class Pixel(object):
                  dimension='1',
                  colours='all',
                  pixelsize='1'):
+        self.start_time = time()
         self.__image__(image)
         self.__orientation__(orientation)
         self.__halign__(halign)
@@ -23,6 +26,7 @@ class Pixel(object):
         self.__dimension__(dimension)
         self.__colours__(colours)
         self.__pixelsize__(pixelsize)
+        print(f'Time to setup: {self.timer()}')
         
         self.run()
 
@@ -157,7 +161,24 @@ class Pixel(object):
                     best_dist = dist
             return best_key
 
+    @staticmethod
+    def time_to_string(t):
+        hours = int(t/3600)
+        minutes = int((t - 3600*hours)/60)
+        seconds = int(t - 3600*hours - 60*minutes)
+        if hours:
+            s = f'{hours}h{minutes}m{seconds}s'
+        elif minutes:
+            s = f'{minutes}m{seconds}s'
+        else:
+            s = f'{seconds}s'
+        return s
+
+    def timer(self):
+        return self.time_to_string(time() - self.start_time)
+
     def reduce_im(self):
+        print(f'0 of {self.nx*self.ny} done: {self.timer()}')
         self.pim = np.zeros((self.nx, self.ny, 3))
         for i in range(self.nx):
             for j in range(self.ny):
@@ -167,6 +188,10 @@ class Pixel(object):
                         self.dy + self.mult*j:self.dy + self.mult + self.mult*j,
                     :],
                 axis=0), axis=0)
+                sys.stdout.write('\033[F\033[K')
+                print(f'{1 + i*self.ny + j} of {self.nx*self.ny} done: {self.timer()}')
+        sys.stdout.write('\033[F\033[K')
+        print(f'Reduced image done: {self.timer()}')
 
     def savepim(self):
         fig = plt.figure(figsize=(self.ny, self.nx), dpi=1)
