@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgb
 from time import time
 import sys
+import shutil
 
 
 class Pixel(object):
@@ -194,8 +195,8 @@ class Pixel(object):
         sys.stdout.write('\033[F\033[K')
         print(f'Time to reduce image: {self.timer()}')
 
-    def saverim(self):
-        fig = plt.figure(figsize=(self.ny, self.nx), dpi=1)
+    def saverim(self, dpi=1):
+        fig = plt.figure(figsize=(self.ny, self.nx), dpi=dpi)
         fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
         ax = fig.add_subplot()
         ax.axis('off')
@@ -203,6 +204,7 @@ class Pixel(object):
         ax.set_ylim(ymin=0, ymax=self.nx)
         ax.imshow(self.rim, extent=(0, self.ny, 0, self.nx))
         fig.savefig('rim.png')
+        plt.close()
 
     def pixel_im(self):
         colour_options = self.get_colour_options()
@@ -262,8 +264,8 @@ class Pixel(object):
         print(f'Time to get colour options: {self.timer()}')
         return colour_options
 
-    def savepim(self):
-        fig = plt.figure(figsize=(self.ny, self.nx), dpi=1)
+    def savepim(self, dpi=1):
+        fig = plt.figure(figsize=(self.ny, self.nx), dpi=dpi)
         fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
         ax = fig.add_subplot()
         ax.axis('off')
@@ -271,9 +273,32 @@ class Pixel(object):
         ax.set_ylim(ymin=0, ymax=self.nx)
         ax.imshow(self.pim, extent=(0, self.ny, 0, self.nx))
         fig.savefig('pim.png')
+        plt.close()
 
-    def run(self):
+    def savenim(self, dpi=1, templates_dir='templates'):
+        if osp.exists(templates_dir):
+            shutil.rmtree(templates_dir)
+        os.makedirs(templates_dir)
+        for i in range(self.xdim):
+            for j in range(self.ydim):
+                nim_plate = self.nim[
+                        i*self.pixelplate[0]:(i+1)*self.pixelplate[0],
+                        j*self.pixelplate[1]:(j+1)*self.pixelplate[1],
+                ]
+                for num in np.unique(nim_plate):
+                    fig = plt.figure(figsize=(self.ny, self.nx), dpi=dpi)
+                    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+                    ax = fig.add_subplot()
+                    ax.axis('off')
+                    ax.set_xlim(xmin=0, xmax=self.ny)
+                    ax.set_ylim(ymin=0, ymax=self.nx)
+                    ax.imshow(nim_plate != num, cmap='gray', extent=(0, self.ny, 0, self.nx))
+                    fig.savefig(osp.join(templates_dir, f'nim_{i+1}_{j+1}_{num}.png'))
+                    plt.close()
+
+    def run(self, dpi=10, templates_dir='templates'):
         self.reduce_im()
-        self.saverim()
+        self.saverim(dpi=dpi)
         self.pixel_im()
-        self.savepim()
+        self.savepim(dpi=dpi)
+        self.savenim(dpi=dpi, templates_dir=templates_dir)
