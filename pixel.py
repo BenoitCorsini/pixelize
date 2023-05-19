@@ -20,6 +20,7 @@ class Pixel(object):
                  dimension='1',
                  colours='all',
                  pixelsize='1',
+                 draft=1,
                  dpi=1):
         self.start_time = time()
         self.__image__(image)
@@ -30,6 +31,7 @@ class Pixel(object):
         self.reduce_im()
         self.__colours__(colours)
         self.__pixelsize__(pixelsize)
+        self.draft = draft
         self.dpi = dpi
         folder, file = osp.split(self.image)
         file = osp.splitext(file)[0]
@@ -363,5 +365,6 @@ class Pixel(object):
     def run(self):
         self.pixel_im()
         self.savepim()
-        self.savenim()
-        self.saveplates()
+        if not self.draft:
+            self.savenim()
+            self.saveplates()
