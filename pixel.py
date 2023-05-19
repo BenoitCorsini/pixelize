@@ -27,6 +27,7 @@ class Pixel(object):
         self.__halign__(halign)
         self.__valign__(valign)
         self.__dimension__(dimension)
+        self.reduce_im()
         self.__colours__(colours)
         self.__pixelsize__(pixelsize)
         self.dpi = dpi
@@ -109,21 +110,28 @@ class Pixel(object):
         self.dy = self.imy - self.mult*self.ny
         self.dy = int(0.5 + self.yalign*self.dy)
 
-    @staticmethod
-    def top_colours(colours, rgb):
+    def top_colours(self, colours, rgb):
         keys = ''
-        value = int(colours.replace('top', ''))
+        use_image = False
+        if colours.endswith('image'):
+            use_image = True
+        value = int(colours.replace('top', '').replace('image', ''))
         K = []
+        T = []
         X = []
         for key, colour in rgb.items():
             K.append(key)
-            X.append(colour)
+            T.append(colour)
         K = np.array(K)
-        X = np.stack(X)
+        T = np.stack(T)
+        if use_image:
+            X = np.reshape(self.rim, (-1, 3))
+        else:
+            X = T.copy()
         clusters = KMeans(n_clusters=value, n_init='auto').fit_predict(X)
         for v in range(value):
             C = np.mean(X[clusters==v,:], axis=0, keepdims=True)
-            key = K[np.argmin(np.mean(np.abs(X - C), axis=-1))]
+            key = K[np.argmin(np.mean(np.abs(T - C), axis=-1))]
             keys += f'{key}-'
         return keys[:-1]
 
@@ -359,7 +367,6 @@ class Pixel(object):
         print(f'Time to get pixel plates: {self.timer()}')
 
     def run(self):
-        self.reduce_im()
         self.pixel_im()
         self.savepim()
         self.savenim()

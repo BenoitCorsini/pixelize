@@ -28,7 +28,9 @@ if __name__ == '__main__':
             the colours to be used for the pixelized image.
             Can be:
             - a list of colours separated by '-', for example 'blue-darkblue-cyan';
-            - a list of plate numbers separated by '-', for example '100-220-333'; or
+            - a list of plate numbers separated by '-', for example '100-220-333';
+            - of the form 'topX' to pick the top X plate colours, for example top10;
+            - of the form 'topXimage' to pick the top X colours of the image; or
             - one of the pre-implemented options ('primary' 'basic', 'classic', or 'all').
         ''')
     parser.add_argument('--pixelsize', type=str, default='1',
