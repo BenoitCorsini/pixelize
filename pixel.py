@@ -7,6 +7,7 @@ from matplotlib.colors import to_rgb
 from time import time
 import sys
 import shutil
+from sklearn.cluster import KMeans
 
 
 class Pixel(object):
@@ -100,6 +101,24 @@ class Pixel(object):
         self.dy = self.imy - self.mult*self.ny
         self.dy = int(0.5 + self.yalign*self.dy)
 
+    @staticmethod
+    def top_colours(colours, rgb):
+        keys = ''
+        value = int(colours.replace('top', ''))
+        K = []
+        X = []
+        for key, colour in rgb.items():
+            K.append(key)
+            X.append(colour)
+        K = np.array(K)
+        X = np.stack(X)
+        clusters = KMeans(n_clusters=value, n_init='auto').fit_predict(X)
+        for v in range(value):
+            C = np.mean(X[clusters==v,:], axis=0, keepdims=True)
+            key = K[np.argmin(np.mean(np.abs(X - C), axis=-1))]
+            keys += f'{key}-'
+        return keys[:-1]
+
     def __colours__(self, colours, rgb_dict='rgb.json'):
         self.colours = colours
         with open(rgb_dict, 'r') as d:
@@ -110,21 +129,11 @@ class Pixel(object):
             if self.colours == 'primary':
                 keys = 'blue-red-yellow'
             elif self.colours == 'basic':
-                keys = 'peachpuff-crimson-ivory-gold-royalblue-navy-forestgreen'
+                keys = 'white-tab:blue-tab:red-tab:green-tab:pink-tab:orange-tab:brown'
             elif self.colours == 'classic':
-                # this will be changed later down
-                keys = 'tab:blue'
-                keys += '-tab:orange'
-                keys += '-tab:green'
-                keys += '-tab:red'
-                keys += '-tab:purple'
-                keys += '-tab:brown'
-                keys += '-tab:pink'
-                keys += '-tab:gray'
-                keys += '-tab:olive'
-                keys += '-tab:cyan'
-                keys += '-white'
-                keys += '-black'
+                keys = 'peachpuff-crimson-ivory-gold-royalblue-navy-forestgreen'
+            elif self.colours.startswith('top'):
+                keys = self.top_colours(self.colours, rgb)
             else:
                 keys = self.colours
 
