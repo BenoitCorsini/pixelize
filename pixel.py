@@ -138,7 +138,7 @@ class Pixel(object):
             self.xps = int(self.pixelsize)
             self.yps = int(self.pixelsize)
         else:
-            self.xps, self.yps = self.pixelsize.split('x')
+            self.yps, self.xps = self.pixelsize.split('x')
             self.xps = int(self.xps)
             self.yps = int(self.yps)
 
@@ -178,20 +178,89 @@ class Pixel(object):
         return self.time_to_string(time() - self.start_time)
 
     def reduce_im(self):
-        print(f'0 of {self.nx*self.ny} done: {self.timer()}')
-        self.pim = np.zeros((self.nx, self.ny, 3))
+        print(f'0% of reduced image: {self.timer()}')
+        self.rim = np.zeros((self.nx, self.ny, 3))
         for i in range(self.nx):
             for j in range(self.ny):
-                self.pim[i,j,:] = np.mean(np.mean(
+                self.rim[i,j,:] = np.mean(np.mean(
                     self.im[
                         self.dx + self.mult*i:self.dx + self.mult + self.mult*i,
                         self.dy + self.mult*j:self.dy + self.mult + self.mult*j,
                     :],
                 axis=0), axis=0)
+                perc = int(100*(1 + i*self.ny + j)/(self.nx*self.ny))
                 sys.stdout.write('\033[F\033[K')
-                print(f'{1 + i*self.ny + j} of {self.nx*self.ny} done: {self.timer()}')
+                print(f'{perc}% of reduced image: {self.timer()}')
         sys.stdout.write('\033[F\033[K')
-        print(f'Reduced image done: {self.timer()}')
+        print(f'Time to reduce image: {self.timer()}')
+
+    def saverim(self):
+        fig = plt.figure(figsize=(self.ny, self.nx), dpi=1)
+        fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+        ax = fig.add_subplot()
+        ax.axis('off')
+        ax.set_xlim(xmin=0, xmax=self.ny)
+        ax.set_ylim(ymin=0, ymax=self.nx)
+        ax.imshow(self.rim, extent=(0, self.ny, 0, self.nx))
+        fig.savefig('rim.png')
+
+    def pixel_im(self):
+        colour_options = self.get_colour_options()
+        print(f'0% of pixel image: {self.timer()}')
+        self.pim = np.zeros((self.nx, self.ny, 3), dtype=float)
+        self.nim = np.zeros((self.nx, self.ny), dtype=int)
+        xsteps = int(self.nx/self.xps)
+        ysteps = int(self.ny/self.yps)
+        for i in range(xsteps):
+            for j in range(ysteps):
+                block = self.rim[
+                    i*self.xps:i*self.xps + self.xps,
+                    j*self.yps:j*self.yps + self.yps,
+                :]
+                best_mean = 1
+                best_dist = 1
+                for colour, option in colour_options:
+                    D = block - colour
+                    mean = np.mean(np.abs(np.mean(np.mean(D, axis=0), axis=0)))
+                    if mean <= best_mean + 1e-10:
+                        best_mean = mean
+                        dist = np.mean(np.abs(D))
+                        if dist < best_dist:
+                            best_dist = dist
+                            self.pim[
+                                i*self.xps:i*self.xps + self.xps,
+                                j*self.yps:j*self.yps + self.yps,
+                            :] = colour
+                            self.nim[
+                                i*self.xps:i*self.xps + self.xps,
+                                j*self.yps:j*self.yps + self.yps,
+                            ] = option
+                perc = int(100*(1 + i*ysteps + j)/(xsteps*ysteps))
+                sys.stdout.write('\033[F\033[K')
+                print(f'{perc}% of pixel image: {self.timer()}')
+        sys.stdout.write('\033[F\033[K')
+        print(f'Time to pixel image: {self.timer()}')
+
+    def get_colour_options(self):
+        assert len(self.rgb)**(self.xps*self.yps) < 1e5
+        colour_options = [(
+            np.zeros((self.xps, self.yps, 3), dtype=float),
+            np.zeros((self.xps, self.yps), dtype=int),
+        )]
+        for i in range(self.xps):
+            for j in range(self.yps):
+                pre_options = colour_options.copy()
+                colour_options = []
+                for colour, option in pre_options:
+                    for number, rgb in self.rgb.items():
+                        colour[i,j,:] = rgb
+                        option[i,j] = number
+                        colour_options.append((
+                            colour.copy(),
+                            option.copy(),
+                        ))
+        print(f'Time to get colour options: {self.timer()}')
+        return colour_options
 
     def savepim(self):
         fig = plt.figure(figsize=(self.ny, self.nx), dpi=1)
@@ -205,4 +274,6 @@ class Pixel(object):
 
     def run(self):
         self.reduce_im()
+        self.saverim()
+        self.pixel_im()
         self.savepim()
