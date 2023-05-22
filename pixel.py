@@ -55,9 +55,9 @@ class Pixel(object):
         self.imy = np.size(self.im, axis=1)
 
     def __orientation__(self, orientation):
-        assert orientation in ['vertical', 'horizontal']
+        assert orientation in ['v', 'vertical', 'h', 'horizontal']
         self.orientation = orientation
-        if self.orientation == 'vertical':
+        if self.orientation in ['v', 'vertical']:
             self.pixelplate = (50, 40)
         else:
             self.pixelplate = (40, 50)
@@ -141,7 +141,7 @@ class Pixel(object):
             X = np.reshape(self.rim, (-1, 3))
         else:
             X = T.copy()
-        clusters = KMeans(n_clusters=value, n_init='auto').fit_predict(X)
+        clusters = KMeans(n_clusters=value, n_init='auto', max_iter=1000, tol=1e-5).fit_predict(X)
         for v in range(value):
             C = np.mean(X[clusters==v,:], axis=0, keepdims=True)
             key = K[np.argmin(np.mean(np.abs(T - C), axis=-1))]

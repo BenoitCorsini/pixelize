@@ -7,7 +7,7 @@ if __name__ == '__main__':
     parser.add_argument('--image', type=str, default='image.jpg',
         help='The image to be pixelized.')
     parser.add_argument('--orientation', type=str, default='vertical',
-        help='If the pixel plates should be placed: vertical or horizontal.')
+        help='If the pixel plates should be placed: v, vertical, h, or horizontal.')
     parser.add_argument('--halign', type=str, default='center',
         help='''
         How the image should be aligned horizontally.
@@ -29,7 +29,7 @@ if __name__ == '__main__':
             Can be:
             - a list of colours separated by '-', for example 'blue-darkblue-cyan';
             - a list of plate numbers separated by '-', for example '100-220-333';
-            - of the form 'topX' to pick the top X plate colours, for example top10;
+            - of the form 'topX' to pick the top X plate colours, for example 'top10';
             - of the form 'topXimage' to pick the top X colours of the image; or
             - one of the pre-implemented options ('primary' 'basic', 'classic', or 'all').
         ''')
