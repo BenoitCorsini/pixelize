@@ -3,11 +3,8 @@ import os.path as osp
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import to_rgb
-from time import time
 import sys
 import shutil
-from sklearn.cluster import KMeans
 
 from __init__ import PixelInit
 
