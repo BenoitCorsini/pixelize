@@ -131,8 +131,10 @@ class Pixel(PixelInit):
 
     @staticmethod
     def draw_info(ax, xpos, ypos, cnum, npix):
+        nsquares = int(npix/PIXELS_PER_SQUARE)
+        leftovers = npix - PIXELS_PER_SQUARE*nsquares
         ax.text(
-            s=f'plate {xpos}x{ypos}\ncolour {cnum}\n{npix} pixels',
+            s=f'plate {xpos}x{ypos}\ncolour {cnum}\npixels: {nsquares}x{PIXELS_PER_SQUARE} + {leftovers}',
             **PLATE_INFO_PARAMS
         )
 
