@@ -131,12 +131,14 @@ class Pixel(PixelInit):
 
     @staticmethod
     def draw_info(ax, xpos, ypos, cnum, npix):
+        s = f'plate {xpos}x{ypos}\ncolour {cnum}\npixels: '
         nsquares = int(npix/PIXELS_PER_SQUARE)
-        leftovers = npix - PIXELS_PER_SQUARE*nsquares
-        ax.text(
-            s=f'plate {xpos}x{ypos}\ncolour {cnum}\npixels: {nsquares}x{PIXELS_PER_SQUARE} + {leftovers}',
-            **PLATE_INFO_PARAMS
-        )
+        if nsquares:
+            leftovers = npix - PIXELS_PER_SQUARE*nsquares
+            s += f'{nsquares}x{PIXELS_PER_SQUARE} + {leftovers}'
+        else:
+            s += f'{npix}'
+        ax.text(s=s, **PLATE_INFO_PARAMS)
 
     def plates_im(self):
         print(f'0% of pixel plates: {self.timer()}')
