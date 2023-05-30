@@ -6,6 +6,8 @@ from matplotlib.colors import to_rgb
 from time import time
 from sklearn.cluster import KMeans
 
+from config import *
+
 
 class PixelInit(object):
 
@@ -25,10 +27,10 @@ class PixelInit(object):
         assert osp.exists(image)
         self.image = image
         self.im = plt.imread(self.image)
-        if np.size(self.im, axis=-1) > 3:
-            self.im = self.im[:,:,:3]*self.im[:,:,3:]
+        if np.size(self.im, axis=-1) > RGB_DIM:
+            self.im = self.im[:,:,:RGB_DIM]*self.im[:,:,RGB_DIM:]
         if np.max(self.im) > 1:
-            self.im = self.im/255
+            self.im = self.im/RGB_MAX_INT
         self.imx = np.size(self.im, axis=0)
         self.imy = np.size(self.im, axis=1)
 
@@ -36,14 +38,14 @@ class PixelInit(object):
         assert orientation in ['default', 'v', 'vertical', 'h', 'horizontal']
         self.orientation = orientation
         if self.orientation in ['v', 'vertical']:
-            self.pixelplate = (50, 40)
+            self.pixelplate = PIXELPLATE_SIZE
         elif self.orientation in ['h', 'horizontal']:
-            self.pixelplate = (40, 50)
+            self.pixelplate = PIXELPLATE_SIZE[::-1]
         else:
             if self.imx >= self.imy:
-                self.pixelplate = (50, 40)
+                self.pixelplate = PIXELPLATE_SIZE
             else:
-                self.pixelplate = (40, 50)
+                self.pixelplate = PIXELPLATE_SIZE[::-1]
 
     def __halign__(self, halign):
         self.halign = halign
@@ -95,7 +97,7 @@ class PixelInit(object):
         dx = int(0.5 + self.xalign*dx)
         dy = self.imy - mult*self.ny
         dy = int(0.5 + self.yalign*dy)
-        self.rim = np.zeros((self.nx, self.ny, 3))
+        self.rim = np.zeros((self.nx, self.ny, RGB_DIM))
         for i in range(self.nx):
             for j in range(self.ny):
                 self.rim[i,j,:] = np.mean(np.mean(
@@ -105,9 +107,9 @@ class PixelInit(object):
                     :],
                 axis=0), axis=0)
 
-    def __colours__(self, colours, rgb_dict='rgb.json'):
+    def __colours__(self, colours):
         self.colours = colours
-        with open(rgb_dict, 'r') as d:
+        with open(RGB_DICT, 'r') as d:
             rgb = json.load(d)
         if self.colours == 'all':
             self.rgb = rgb.copy()
@@ -128,7 +130,7 @@ class PixelInit(object):
                 rgb_keys.append(self.key_to_rgb_key(key, rgb))
             self.rgb = {key : rgb[key] for key in sorted(rgb_keys)}
 
-    def __top_colours__(self, colours, rgb, n_init=100, max_iter=1000, tol=1e-5, random_state=27):
+    def __top_colours__(self, colours, rgb):
         assert colours.startswith('top')
         keys = ''
         use_image = colours.endswith('image')
@@ -142,16 +144,10 @@ class PixelInit(object):
         K = np.array(K)
         T = np.stack(T)
         if use_image:
-            X = np.reshape(self.rim, (-1, 3))
+            X = np.reshape(self.rim, (-1, RGB_DIM))
         else:
             X = T.copy()
-        clusters = KMeans(
-            n_clusters=value,
-            n_init=n_init,
-            max_iter=max_iter,
-            tol=tol,
-            random_state=random_state,
-        ).fit_predict(X)
+        clusters = KMeans(n_clusters=value, **KMEANS_PARAMS).fit_predict(X)
         for v in range(value):
             C = np.mean(X[clusters==v,:], axis=0, keepdims=True)
             key = K[np.argmin(np.mean(np.abs(T - C), axis=-1))]
