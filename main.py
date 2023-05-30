@@ -6,8 +6,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--image', type=str, default='image.jpg',
         help='The image to be pixelized.')
-    parser.add_argument('--orientation', type=str, default='vertical',
-        help='If the pixel plates should be placed: v, vertical, h, or horizontal.')
+    parser.add_argument('--orientation', type=str, default='default',
+        help='If the pixel plates should be placed by default, vertically, or horizontally.')
     parser.add_argument('--halign', type=str, default='center',
         help='''
         How the image should be aligned horizontally.

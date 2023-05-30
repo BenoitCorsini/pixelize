@@ -55,12 +55,17 @@ class Pixel(object):
         self.imy = np.size(self.im, axis=1)
 
     def __orientation__(self, orientation):
-        assert orientation in ['v', 'vertical', 'h', 'horizontal']
+        assert orientation in ['default', 'v', 'vertical', 'h', 'horizontal']
         self.orientation = orientation
         if self.orientation in ['v', 'vertical']:
             self.pixelplate = (50, 40)
-        else:
+        elif self.orientation in ['h', 'horizontal']:
             self.pixelplate = (40, 50)
+        else:
+            if self.imx >= self.imy:
+                self.pixelplate = (50, 40)
+            else:
+                self.pixelplate = (40, 50)
 
     def __halign__(self, halign):
         self.halign = halign
@@ -141,7 +146,13 @@ class Pixel(object):
             X = np.reshape(self.rim, (-1, 3))
         else:
             X = T.copy()
-        clusters = KMeans(n_clusters=value, n_init='auto', max_iter=1000, tol=1e-5).fit_predict(X)
+        clusters = KMeans(
+            n_clusters=value,
+            n_init=100,
+            max_iter=1000,
+            tol=1e-5,
+            random_state=27
+        ).fit_predict(X)
         for v in range(value):
             C = np.mean(X[clusters==v,:], axis=0, keepdims=True)
             key = K[np.argmin(np.mean(np.abs(T - C), axis=-1))]
@@ -337,7 +348,7 @@ class Pixel(object):
                     ax.set_xlim(xmin=0, xmax=xmax)
                     ax.set_ylim(ymin=0, ymax=ymax)
                     im = nim_plate != num
-                    if self.orientation == 'horizontal':
+                    if self.pixelplate[0] > self.pixelplate[1]:
                         im = im.T[::-1,:]
                     ax.imshow(im, cmap='gray', extent=extent)
                     for z in range(41):
