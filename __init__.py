@@ -16,7 +16,7 @@ class PixelInit(object):
         self.__halign__(halign)
         self.__valign__(valign)
         self.__dimension__(dimension)
-        self.__reduced__()
+        self.__reducer__()
         self.__colours__(colours)
         self.__pixelsize__(pixelsize)
         print(f'Time to setup: {self.timer()}')
@@ -84,24 +84,24 @@ class PixelInit(object):
             self.xdim = int(self.xdim)
         self.nx = self.pixelplate[0]*self.xdim
         self.ny = self.pixelplate[1]*self.ydim
-        self.mult = min(
+
+    def __reducer__(self):
+        mult = min(
             int(self.imx/self.nx),
             int(self.imy/self.ny),
         )
-        assert self.mult > 0
-        self.dx = self.imx - self.mult*self.nx
-        self.dx = int(0.5 + self.xalign*self.dx)
-        self.dy = self.imy - self.mult*self.ny
-        self.dy = int(0.5 + self.yalign*self.dy)
-
-    def __reduced__(self):
+        assert mult > 0
+        dx = self.imx - mult*self.nx
+        dx = int(0.5 + self.xalign*dx)
+        dy = self.imy - mult*self.ny
+        dy = int(0.5 + self.yalign*dy)
         self.rim = np.zeros((self.nx, self.ny, 3))
         for i in range(self.nx):
             for j in range(self.ny):
                 self.rim[i,j,:] = np.mean(np.mean(
                     self.im[
-                        self.dx + self.mult*i:self.dx + self.mult + self.mult*i,
-                        self.dy + self.mult*j:self.dy + self.mult + self.mult*j,
+                        dx + mult*i:dx + mult + mult*i,
+                        dy + mult*j:dy + mult + mult*j,
                     :],
                 axis=0), axis=0)
 
@@ -129,7 +129,7 @@ class PixelInit(object):
             self.rgb = {key : rgb[key] for key in sorted(rgb_keys)}
 
     def __top_colours__(self, colours, rgb, n_init=100, max_iter=1000, tol=1e-5, random_state=27):
-        assert self.colours.startswith('top')
+        assert colours.startswith('top')
         keys = ''
         use_image = colours.endswith('image')
         value = int(colours.replace('top', '').replace('image', ''))
