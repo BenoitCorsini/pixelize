@@ -26,7 +26,7 @@ class Pixel(PixelInit):
 
     def set_image(self, im, figsize=None, extent=None, cmap=None):
         if figsize is None:
-            figsize = self.pixelplate[::-1]
+            figsize = (self.ny, self.nx)
         if extent is None:
             extent = (0, figsize[0], 0, figsize[1])
         fig = plt.figure(figsize=figsize, dpi=self.dpi)
