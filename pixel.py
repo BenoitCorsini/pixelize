@@ -12,10 +12,11 @@ from config import *
 
 class Pixel(PixelInit):
 
-    def __init__(self, draft, dpi, **kwargs):
+    def __init__(self, draft, dpi, pixel_file=None, **kwargs):
         super().__init__(**kwargs)
         self.draft = draft
         self.dpi = dpi
+        self.pixel_file = pixel_file
         folder, file = osp.split(self.image)
         file = osp.splitext(file)[0]
         self.save_dir = osp.join(folder, f'{OUTPUT_FOLDER}{file}')
@@ -194,14 +195,29 @@ class Pixel(PixelInit):
         print(f'Time to get pixel plates: {self.timer()}')
 
     def summarize_plates(self):
+        pixels = {}
+        if self.pixel_file is not None:
+            with open(self.pixel_file, 'r') as p:
+                for line in p:
+                    line = line.strip()
+                    if line:
+                        col, num = line.strip().split('\t')
+                        pixels[int(col)] = int(num)
         with open(osp.join(self.save_dir, PLATES_FILE), 'w') as p:
             total = 0
             for col, infos in self.plates.items():
-                num = infos['plates']
-                extra = infos['extras']
-                p.write(f'{col}\t{num}\t({extra})\n')
-                total += num
+                count = infos['pixels'] - pixels.get(col, 0)
+                num = int(np.ceil(count/PIXELS_PER_SQUARE))
+                extra = PIXELS_PER_SQUARE*num - count
+                pixels[col] = extra
+                if num:
+                    p.write(f'{col}\t{num}\t({extra})\n')
+                    total += num
             p.write(f'Total: {total}')
+        with open(osp.join(self.save_dir, PIXEL_FILE), 'w') as p:
+            for col in sorted(pixels):
+                if pixels[col]:
+                    p.write(f'{col}\t{pixels[col]}\n')
 
     def run(self):
         self.pixel_im()

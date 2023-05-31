@@ -43,5 +43,7 @@ if __name__ == '__main__':
         help='Whether using the draft mode, only testing the image output.')
     parser.add_argument('--dpi', type=int, default=20,
         help='The dpi for all images.')
+    parser.add_argument('--pixel_file', type=str, default=None,
+        help='The file of number of already available pixels.')
     kwargs = vars(parser.parse_args())
     Pixel(**kwargs)
