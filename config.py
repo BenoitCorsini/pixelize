@@ -28,5 +28,6 @@ NIM_RATIO = 0.8
 OUTPUT_FOLDER = 'output:'
 IMAGE_FILE = 'image.png'
 PLATES_INFO = 'plates.json'
+PLATES_FILE = 'plates.txt'
 IMAGES_PER_NUMBER_FOLDER = 'nims'
 PLATES_FOLDER = 'plates'

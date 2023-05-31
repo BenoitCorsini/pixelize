@@ -193,8 +193,19 @@ class Pixel(PixelInit):
         sys.stdout.write('\033[F\033[K')
         print(f'Time to get pixel plates: {self.timer()}')
 
+    def summarize_plates(self):
+        with open(osp.join(self.save_dir, PLATES_FILE), 'w') as p:
+            total = 0
+            for col, infos in self.plates.items():
+                num = infos['plates']
+                extra = infos['extras']
+                p.write(f'{col}\t{num}\t({extra})\n')
+                total += num
+            p.write(f'Total: {total}')
+
     def run(self):
         self.pixel_im()
         if not self.draft:
             self.number_im()
             self.plates_im()
+        self.summarize_plates()
