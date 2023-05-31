@@ -22,6 +22,8 @@ PLATE_INFO_PARAMS = {
     'fontsize' : 127,
     'color' : 'gray',
 }
+NIM_THRESHOLD = 0.2
+NIM_RATIO = 0.8
 
 OUTPUT_FOLDER = 'output:'
 IMAGE_FILE = 'image.png'

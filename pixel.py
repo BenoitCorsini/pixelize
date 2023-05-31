@@ -108,7 +108,18 @@ class Pixel(PixelInit):
                 'pixels' : count,
                 'extras' : PIXELS_PER_SQUARE*plates - count,
             }
-            fig, ax = self.set_image(self.nim != num, cmap='gray')
+            im = self.nim == num
+            is_light = np.mean(np.array([
+                np.mean(self.pim[:,:,0][im]),
+                np.mean(self.pim[:,:,1][im]),
+                np.mean(self.pim[:,:,2][im]),
+            ])) > 1 - NIM_THRESHOLD
+            im = np.stack([im], axis=-1)
+            if is_light:
+                im = im*self.pim + (1 - im)*(1 - NIM_RATIO)*self.pim
+            else:
+                im = im*self.pim + (1 - im)*(NIM_RATIO + (1 - NIM_RATIO)*self.pim)
+            fig, ax = self.set_image(im)
             fig.savefig(osp.join(self.save_dir, IMAGES_PER_NUMBER_FOLDER, f'{num}:{count}({plates}).png'))
             plt.close()
         with open(osp.join(self.save_dir, PLATES_INFO), 'w') as p:
