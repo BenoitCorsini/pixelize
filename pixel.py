@@ -3,6 +3,7 @@ import os.path as osp
 import json
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import sys
 import shutil
 
@@ -19,6 +20,7 @@ class Pixel(PixelInit):
         self.pixel_file = pixel_file
         folder, file = osp.split(self.image)
         file = osp.splitext(file)[0]
+        self.im_name = file
         self.save_dir = osp.join(folder, f'{OUTPUT_FOLDER}{file}')
         if osp.exists(self.save_dir):
             shutil.rmtree(self.save_dir)
@@ -76,8 +78,8 @@ class Pixel(PixelInit):
                     j*self.yps:j*self.yps + self.yps,
                 :]], axis=-1)
                 D = block - colour
-                mean = np.mean(np.abs(np.mean(np.mean(D, axis=0), axis=0)), axis=0)
-                dist = np.mean(np.mean(np.mean(np.abs(D), axis=0), axis=0), axis=0)
+                mean = np.mean(np.abs(np.mean(np.mean(D, axis=0), axis=0))**DIST_POWER, axis=0)**(1/DIST_POWER)
+                dist = np.mean(np.mean(np.mean(np.abs(D)**DIST_POWER, axis=2)**(1/DIST_POWER), axis=0), axis=0)
                 dist += mean > np.min(mean)
                 index = np.argmin(dist)
                 self.pim[
@@ -141,8 +143,7 @@ class Pixel(PixelInit):
                 **GRID_PARAMS
             )
 
-    @staticmethod
-    def draw_info(ax, xpos, ypos, cnum, npix):
+    def draw_info(self, ax, xpos, ypos, cnum, npix):
         s = f'plate {xpos}x{ypos}\ncolour {cnum}\npixels: '
         nsquares = int(npix/PIXELS_PER_SQUARE)
         if nsquares:
@@ -150,7 +151,9 @@ class Pixel(PixelInit):
             s += f'{nsquares}x{PIXELS_PER_SQUARE} + {leftovers}'
         else:
             s += f'{npix}'
+        ax.text(s=f'Image: {self.im_name}', **IM_NAME_PARAMS)
         ax.text(s=s, **PLATE_INFO_PARAMS)
+        ax.add_patch(Rectangle(color=self.rgb[str(cnum)], **PLATE_COLOUR_PARAMS))
 
     def plates_im(self):
         print(f'0% of pixel plates: {self.timer()}')
@@ -224,4 +227,4 @@ class Pixel(PixelInit):
         if not self.draft:
             self.number_im()
             self.plates_im()
-        self.summarize_plates()
+            self.summarize_plates()
